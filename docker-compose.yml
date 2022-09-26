@@ -1,0 +1,46 @@
+version: '3.8'
+services:
+  nodejs:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: nodejs
+    container_name: nodejs
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      - MYSQL_HOST=$MYSQL_HOST
+      - MYSQL_USER=$MYSQL_USER
+      - MYSQL_PORT=$MYSQL_PORT
+      - MYSQL_PASSWORD=$MYSQL_PASSWORD
+    ports:
+      - "3000:8080"
+    volumes:
+      - .:/home/node/app
+      - node_modules:/home/node/app/node_modules
+    networks:
+      - app-network
+    command: ./wait-for.sh db:3306 -- /home/node/app/node_modules/.bin/nodemon app.js
+
+  db:
+    image: mysql:8.0
+    container_name: db
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      - MYSQL_HOST=$MYSQL_HOST
+      - MYSQL_USER=$MYSQL_USER
+      - MYSQL_PORT=$MYSQL_PORT
+      - MYSQL_PASSWORD=$MYSQL_PASSWORD
+    volumes:     
+      - dbdata:/data/db
+    networks:
+      - app-network  
+
+networks:
+  app-network:
+    driver: bridge
+
+volumes:
+  dbdata:
+  node_modules: 
